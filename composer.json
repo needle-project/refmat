@@ -1,0 +1,25 @@
+{
+  "name": "needle-project/refmat",
+  "description": "Reference matcher system",
+  "license": "MIT",
+  "authors": [
+    {
+      "name": "Adrian Tilita",
+      "email": "adrian@tilita.ro",
+      "homepage": "http://adrian.tilita.ro",
+      "role": "Developer"
+    }
+  ],
+  "require": {
+    "php": ">=5.5"
+  },
+  "require-dev": {
+    "phpunit/phpunit": "^4.8",
+    "squizlabs/php_codesniffer": "2.*",
+    "phpmd/phpmd" : "@stable"
+  },
+  "autoload": {
+    "psr-4": {"NeedleProject\\RefMat\\": "src/"}
+  },
+  "minimum-stability": "stable"
+}
