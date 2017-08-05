@@ -18,30 +18,48 @@ class Matcher
 
     public function buildSet($inputArray)
     {
-        return $this->searchArray($inputArray);
+        return $this->searchArray($inputArray, $inputArray);
     }
 
-    protected function searchArray($array)
+    private $count = 0;
+
+    /**
+     * Indetify and apply tokens
+     * @param $array
+     * @param $baseArray
+     * @todo - at the moment, if no token is found it will cause infinite loop (limited by nesting level)
+     * @return mixed
+     */
+    protected function searchArray($array, $baseArray)
     {
+        $this->count++;
+        if ($this->count == 10) {
+            return $array;
+        }
         $foundAll = true;
         foreach ($array as $key => $value) {
-            if (is_array($value) || !$this->isToken($value)) {
+            if (is_array($value)) {
+                $array[$key] = $this->searchArray($value, $baseArray);
                 continue;
             }
-            if ($tokenValue = $this->findToken($value, $array)) {
+            if (!$this->isToken($value)) {
+                continue;
+            }
+            if ($tokenValue = $this->findToken($value, $baseArray)) {
                 $array[$key] = $tokenValue;
                 continue;
             }
             $foundAll = false;
         }
-        if (!$foundAll) {
-            return $this->searchArray($array);
+        if (!$foundAll && $this->count < 10) {
+            return $this->searchArray($array, $baseArray);
         }
         return $array;
     }
 
     /**
-     * @param mixed $item
+     * Validate if the current value is a token representation
+     * @param string $item
      * @return bool
      */
     protected function isToken($item)
@@ -50,11 +68,21 @@ class Matcher
                 && substr($item, -1 * $this->computedRightLength) === $this->rightTokenDelimiter);
     }
 
+    /**
+     * Extract the delimiter from the token representation
+     * @param string $item
+     * @return string
+     */
     protected function extractToken($item)
     {
         return substr($item, $this->computedLeftLength, $this->computedRightLength * -1);
     }
 
+    /**
+     * @param string $tokenValue
+     * @param array $haystack
+     * @return bool|string
+     */
     protected function findToken($tokenValue, $haystack)
     {
         $tokenValue = $this->extractToken($tokenValue);
@@ -69,5 +97,4 @@ class Matcher
         }
         return false;
     }
-
 }

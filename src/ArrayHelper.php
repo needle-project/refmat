@@ -3,14 +3,14 @@ namespace NeedleProject\RefMat;
 
 class ArrayHelper
 {
-
     /**
      * Verify if a key exist in depth
      * @param $array - The array in wich to search
      * @param $keys - an array with the linear items treated as depth. Ex: array('first_level','second_level','third_level')
+     * @todo - Refactor to non-static, convert from recursive to linear to avoid maximum level of recursion limit
      * @return bool
      */
-    public static function hasKeysInDepth($array, $keys)
+    public function hasKeysInDepth($array, $keys)
     {
         /** If the array is null */
         if (is_null($array) || !is_array($array)) {
@@ -36,6 +36,7 @@ class ArrayHelper
      * Get a value in depth of an array
      * @param $array - The array in wich to search
      * @param $keys - an array with the linear items treated as depth. Ex: array('first_level','second_level','third_level')
+     * @todo - Refactor to non-static, convert from recursive to linear to avoid maximum level of recursion limit
      * @return string
      * @throws \Exception
      */
