@@ -14,87 +14,51 @@ class Matcher
         $this->rightTokenDelimiter = $rightTokenDelimiter;
         $this->computedLeftLength = strlen($leftTokenDelimiter);
         $this->computedRightLength = strlen($rightTokenDelimiter);
+
+        $this->tokenExpression = sprintf('/%1$s([^%1$s%2$s]*)%2$s/', preg_quote($leftTokenDelimiter), preg_quote($rightTokenDelimiter));
     }
 
+    /**
+     * @param array $inputArray
+     * @return array mixed
+     */
     public function buildSet($inputArray)
     {
-        return $this->searchArray($inputArray, $inputArray);
-    }
+        $arrayHelper = new ArrayHelper();
+        $tokenReferences = $this->findTokens(json_encode($inputArray));
+        $it = 0;
+        while (!empty($tokenReferences) && $it < 10) {
+            $it++;
+            foreach ($tokenReferences as $key => $token) {
+                $tokenPath = explode('.', $token);
+                if ($arrayHelper->hasKeysInDepth($inputArray, $tokenPath)) {
+                    // should replace
+                    $value = $arrayHelper->getValueFromDepth($inputArray, $tokenPath);
+                    $replacedString = $this->replaceToken(
+                        $token,
+                        json_encode($value),
+                        json_encode($inputArray)
+                    );
+                    unset($tokenReferences[$key]);
+                    $inputArray = json_decode($replacedString, true);
+                }
+            }
 
-    private $count = 0;
-
-    /**
-     * Indetify and apply tokens
-     * @param $array
-     * @param $baseArray
-     * @todo - at the moment, if no token is found it will cause infinite loop (limited by nesting level)
-     * @return mixed
-     */
-    protected function searchArray($array, $baseArray)
-    {
-        $this->count++;
-        if ($this->count == 10) {
-            return $array;
         }
-        $foundAll = true;
-        foreach ($array as $key => $value) {
-            if (is_array($value)) {
-                $array[$key] = $this->searchArray($value, $baseArray);
-                continue;
-            }
-            if (!$this->isToken($value)) {
-                continue;
-            }
-            if ($tokenValue = $this->findToken($value, $baseArray)) {
-                $array[$key] = $tokenValue;
-                continue;
-            }
-            $foundAll = false;
-        }
-        if (!$foundAll && $this->count < 10) {
-            return $this->searchArray($array, $baseArray);
-        }
-        return $array;
+        return $inputArray;
     }
 
     /**
-     * Validate if the current value is a token representation
-     * @param string $item
-     * @return bool
+     * Find tokens based on regexp
+     * @param string $inputString
+     * @return array
      */
-    protected function isToken($item)
+    private function findTokens($inputString)
     {
-        return (substr($item, 0, $this->computedLeftLength) === $this->leftTokenDelimiter
-                && substr($item, -1 * $this->computedRightLength) === $this->rightTokenDelimiter);
-    }
-
-    /**
-     * Extract the delimiter from the token representation
-     * @param string $item
-     * @return string
-     */
-    protected function extractToken($item)
-    {
-        return substr($item, $this->computedLeftLength, $this->computedRightLength * -1);
-    }
-
-    /**
-     * @param string $tokenValue
-     * @param array $haystack
-     * @return bool|string
-     */
-    protected function findToken($tokenValue, $haystack)
-    {
-        $tokenValue = $this->extractToken($tokenValue);
-        if (isset($haystack[$tokenValue])) {
-            return $haystack[$tokenValue];
+        preg_match_all($this->tokenExpression, $inputString, $results);
+        if (!isset($results[1])) {
+            return [];
         }
-        if (strpos($tokenValue, '.') !== false) {
-            $depthKeys = explode('.', $tokenValue);
-            if (is_array($haystack) && ArrayHelper::hasKeysInDepth($haystack, $depthKeys)) {
-                return ArrayHelper::getValueFromDepth($haystack, $depthKeys);
-            }
-        }
-        return false;
+        return $results[1];
     }
 }

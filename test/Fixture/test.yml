@@ -10,10 +10,10 @@ input:
         name.of.the.item:
             connection: "[[connections.local_connection]]"
         application_1:
-            connections: "[[connection.main_connection_ro]]"
+            connections: "[[connections.main_connection_ro]]"
             specific_item_name: my.queue.name.country.ro
         application_2:
-            connections: "[[connection.main_connection_uk]]"
+            connections: "[[connections.main_connection_uk]]"
             specific_item_name: my.queue.name.country.uk
     connections:
         local_connection:
