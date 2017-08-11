@@ -1,6 +1,7 @@
 <?php
 namespace NeedleProject\RefMat;
 
+use NeedleProject\FileIo\File;
 use PHPUnit_Framework_TestCase as TestCase;
 
 class MatcherTest extends TestCase
@@ -21,8 +22,47 @@ class MatcherTest extends TestCase
         );
     }
 
+    /**
+     * Provide different delimiters and token formats
+     */
+    public function testDifferentDelimiters()
+    {
+        $refMatcher = new Matcher("{%", "%}", ":");
+        $inputArray = [
+            "test" => "{%foo:bar%}",
+            "foo"  => [
+                "bar" => "result"
+            ]
+        ];
+        $expectedOutput = [
+            "test" => "result",
+            "foo"  => [
+                "bar" => "result"
+            ]
+        ];
+        $matches = $refMatcher->buildSet($inputArray);
+
+        $this->assertEquals(
+            $expectedOutput,
+            $matches
+        );
+    }
+
+    /**
+     * Provide success scenarios
+     * Tied to ::testMath
+     *
+     * @return array
+     */
     public function provideScenarios()
     {
+        // more complex scenario
+        $fixturePath = dirname(
+            realpath(__FILE__)
+        ) . DIRECTORY_SEPARATOR . 'Fixture' . DIRECTORY_SEPARATOR . 'test.yml';
+        $fixtureContent = new File($fixturePath);
+        $fixtureContent = $fixtureContent->getContent()->getArray();
+
         return [
             // first set
             [
@@ -31,44 +71,13 @@ class MatcherTest extends TestCase
             ],
             // second set
             [
-                [
-                    'foo' =>
-                    [
-                        'bar' => 'baz'
-                    ],
-                    'qux' => '[[foo.bar]]'
-                ],
-                [
-                    'foo' =>
-                        [
-                            'bar' => 'baz'
-                        ],
-                    'qux' => 'baz'
-                ]
+                $fixtureContent['input'],
+                $fixtureContent['output']
             ],
-            // third set
             [
-                [
-                    'foo' =>
-                        [
-                            'bar' => 'baz'
-                        ],
-                    'baz' => '[[qux.bar]]',
-                    'qux' => '[[foo]]'
-                ],
-                [
-                    'foo' =>
-                        [
-                            'bar' => 'baz'
-                        ],
-                    'baz' => 'baz',
-                    'qux' => [
-                        'bar' => 'baz'
-                    ]
-                ]
+                ['foo' => 'bar'],
+                ['foo' => 'bar']
             ]
         ];
     }
-
-
 }

@@ -11,12 +11,14 @@
     }
   ],
   "require": {
-    "php": ">=5.5"
+    "php": ">=5.5",
+    "needle-project/common": "~0.2"
   },
   "require-dev": {
     "phpunit/phpunit": "^4.8",
     "squizlabs/php_codesniffer": "2.*",
-    "phpmd/phpmd" : "@stable"
+    "phpmd/phpmd" : "@stable",
+    "needle-project/fileio": "~0.4"
   },
   "autoload": {
     "psr-4": {"NeedleProject\\RefMat\\": "src/"}
