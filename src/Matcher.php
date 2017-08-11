@@ -44,6 +44,9 @@ class Matcher
      * @param int    $retryTimes    The number of loop retries until it quits trying
      *                              This occurs when a reference points to another reference in reverse order
      * @param bool   $strict    Whether should throw an exception when not all tokens have been replaced
+     * @todo    Implement strict functionality
+     * @todo    Analyse if it worth combining tokens.
+     *          For example: [[a.b]] may not work when e get replaced with value, not node b reference
      */
     public function __construct(
         $leftTokenDelimiter = '[[',
