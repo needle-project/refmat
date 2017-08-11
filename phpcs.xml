@@ -3,6 +3,7 @@
     <description>PSR2 Check for current code</description>
 
     <file>src/</file>
+    <file>test/</file>
     <arg value="-extensions=php"/>
     <arg value="-colors"/>
     <rule ref="PSR2"/>

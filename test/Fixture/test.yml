@@ -38,6 +38,15 @@ input:
             username: "[[connections.base_connection.username]]"
             password: "[[connections.base_connection.password]]"
             database: uk_database
+    nested:
+        final: "[[nested.nested_array.foo.bar.baz.line]]"
+        base:
+            line: "a"
+        nested_array:
+            foo:
+                bar:
+                    baz: "[[nested.foo]]"
+        foo: "[[nested.base]]"
 output:
     # dummy data
     foo:
@@ -92,3 +101,14 @@ output:
             username: test
             password: test
             database: uk_database
+    nested:
+        final: "a"
+        base:
+            line: "a"
+        nested_array:
+            foo:
+                bar:
+                    baz:
+                        line: "a"
+        foo:
+            line: "a"

@@ -1,21 +1,77 @@
 <?php
 namespace NeedleProject\RefMat;
 
+use NeedleProject\Common\Helper\ArrayHelper;
+
 class Matcher
 {
-    private $leftTokenDelimiter;
-    private $rightTokenDelimiter;
-    private $computedLeftLength = 0;
-    private $computedRightLength = 0;
+    /**
+     * @var null|string
+     */
+    private $tokenExpression = null;
 
-    public function __construct($leftTokenDelimiter = '[[', $rightTokenDelimiter = ']]')
-    {
+    /**
+     * @var null|string
+     */
+    private $leftTokenDelimiter = null;
+
+    /**
+     * @var null|string
+     */
+    private $rightTokenDelimiter = null;
+
+    /**
+     * @var null|string
+     */
+    private $pathSeparator = null;
+
+    /**
+     * @var null|int
+     */
+    private $retryTimes = null;
+
+    /**
+     * @var null|ArrayHelper
+     */
+    private $arrayHelper = null;
+
+    /**
+     * Matcher constructor.
+     *
+     * @param string $leftTokenDelimiter
+     * @param string $rightTokenDelimiter
+     * @param string $pathSeparator
+     * @param int    $retryTimes    The number of loop retries until it quits trying
+     *                              This occurs when a reference points to another reference in reverse order
+     * @param bool   $strict    Whether should throw an exception when not all tokens have been replaced
+     */
+    public function __construct(
+        $leftTokenDelimiter = '[[',
+        $rightTokenDelimiter = ']]',
+        $pathSeparator = '.',
+        $retryTimes = 3,
+        $strict = false
+    ) {
+        $this->tokenExpression = sprintf(
+            '/%1$s([^%1$s%2$s]*)%2$s/',
+            preg_quote($leftTokenDelimiter),
+            preg_quote($rightTokenDelimiter)
+        );
         $this->leftTokenDelimiter = $leftTokenDelimiter;
         $this->rightTokenDelimiter = $rightTokenDelimiter;
-        $this->computedLeftLength = strlen($leftTokenDelimiter);
-        $this->computedRightLength = strlen($rightTokenDelimiter);
+        $this->pathSeparator = $pathSeparator;
+        $this->retryTimes = $retryTimes;
+    }
 
-        $this->tokenExpression = sprintf('/%1$s([^%1$s%2$s]*)%2$s/', preg_quote($leftTokenDelimiter), preg_quote($rightTokenDelimiter));
+    /**
+     * @return \NeedleProject\Common\Helper\ArrayHelper|null
+     */
+    protected function getArrayHelper()
+    {
+        if (is_null($this->arrayHelper)) {
+            $this->arrayHelper = new ArrayHelper();
+        }
+        return $this->arrayHelper;
     }
 
     /**
@@ -24,16 +80,16 @@ class Matcher
      */
     public function buildSet($inputArray)
     {
-        $arrayHelper = new ArrayHelper();
         $tokenReferences = $this->findTokens(json_encode($inputArray));
-        $it = 0;
-        while (!empty($tokenReferences) && $it < 10) {
-            $it++;
+        $retryCounter = 0;
+        while (!empty($tokenReferences) && $retryCounter < $this->retryTimes) {
+            $retryCounter++;
             foreach ($tokenReferences as $key => $token) {
-                $tokenPath = explode('.', $token);
-                if ($arrayHelper->hasKeysInDepth($inputArray, $tokenPath)) {
+                $tokenPath = explode($this->pathSeparator, $token);
+                if ($this->getArrayHelper()->hasKeysInDepth($inputArray, $tokenPath)) {
                     // should replace
-                    $value = $arrayHelper->getValueFromDepth($inputArray, $tokenPath);
+                    $value = $this->getArrayHelper()
+                        ->getValueFromDepth($inputArray, $tokenPath);
                     $replacedString = $this->replaceToken(
                         $token,
                         json_encode($value),
@@ -43,7 +99,6 @@ class Matcher
                     $inputArray = json_decode($replacedString, true);
                 }
             }
-
         }
         return $inputArray;
     }
@@ -60,5 +115,26 @@ class Matcher
             return [];
         }
         return $results[1];
+    }
+
+    /**
+     * Replace all tokens in the string (json_encode the array)
+     * @param string $token
+     * @param string $stringValue
+     * @param string $inputString
+     * @return string
+     */
+    private function replaceToken($token, $stringValue, $inputString)
+    {
+        return preg_replace(
+            sprintf(
+                '/\"%1$s%2$s%3$s\"/',
+                preg_quote($this->leftTokenDelimiter),
+                preg_quote($token),
+                preg_quote($this->rightTokenDelimiter)
+            ),
+            $stringValue,
+            $inputString
+        );
     }
 }

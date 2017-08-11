@@ -22,6 +22,38 @@ class MatcherTest extends TestCase
         );
     }
 
+    /**
+     * Provide different delimiters and token formats
+     */
+    public function testDifferentDelimiters()
+    {
+        $refMatcher = new Matcher("{%", "%}", ":");
+        $inputArray = [
+            "test" => "{%foo:bar%}",
+            "foo"  => [
+                "bar" => "result"
+            ]
+        ];
+        $expectedOutput = [
+            "test" => "result",
+            "foo"  => [
+                "bar" => "result"
+            ]
+        ];
+        $matches = $refMatcher->buildSet($inputArray);
+
+        $this->assertEquals(
+            $expectedOutput,
+            $matches
+        );
+    }
+
+    /**
+     * Provide success scenarios
+     * Tied to ::testMath
+     *
+     * @return array
+     */
     public function provideScenarios()
     {
         // more complex scenario
@@ -30,57 +62,22 @@ class MatcherTest extends TestCase
         ) . DIRECTORY_SEPARATOR . 'Fixture' . DIRECTORY_SEPARATOR . 'test.yml';
         $fixtureContent = new File($fixturePath);
         $fixtureContent = $fixtureContent->getContent()->getArray();
+
         return [
-            /*// first set
+            // first set
             [
                 ['foo' => 'bar', 'baz' => '[[foo]]'],
                 ['foo' => 'bar', 'baz' => 'bar']
             ],
             // second set
             [
-                [
-                    'foo' =>
-                    [
-                        'bar' => 'baz'
-                    ],
-                    'qux' => '[[foo.bar]]'
-                ],
-                [
-                    'foo' =>
-                        [
-                            'bar' => 'baz'
-                        ],
-                    'qux' => 'baz'
-                ]
-            ],
-            // third set
-            [
-                [
-                    'foo' =>
-                        [
-                            'bar' => 'baz'
-                        ],
-                    'baz' => '[[qux.bar]]',
-                    'qux' => '[[foo]]'
-                ],
-                [
-                    'foo' =>
-                        [
-                            'bar' => 'baz'
-                        ],
-                    'baz' => 'baz',
-                    'qux' => [
-                        'bar' => 'baz'
-                    ]
-                ]
-            ],*/
-            [
                 $fixtureContent['input'],
                 $fixtureContent['output']
+            ],
+            [
+                ['foo' => 'bar'],
+                ['foo' => 'bar']
             ]
         ];
-
     }
-
-
 }
